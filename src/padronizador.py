@@ -1,5 +1,4 @@
 import telebot
-import requests
 import unicodedata
 
 #Função para padronizar as respostas do usuário
@@ -14,6 +13,5 @@ def resposta_usuario(resposta):
     for c in resposta:
         if unicodedata.category(c) != 'Mn':
             resposta_normalizada = resposta_normalizada + c
-
 
     print (resposta_normalizada)
