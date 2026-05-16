@@ -150,16 +150,19 @@ def processar_resposta(bot, msg):
             atualizar_usuario(user_id, {'meses': meses})
             _enviar_em_thread(bot, user_id, 'bebe')
         else:
-            # Adultos ou outros perfis
-            faixa = determinar_faixa_etaria(idade)
+            # Guarda a idade do usuário
             atualizar_usuario(user_id, {'idade': idade})
 
-            # Adultos podem ser gestantes
-            if faixa == 'adulto':
+            # Se a pessoa tem 12 anos ou mais, perguntamos sobre gestação
+            # (isso inclui adolescentes a partir de 12 anos)
+            if idade >= 12:
+                # Marca a etapa como gestante para que o clique no botão seja tratado
                 atualizar_usuario(user_id, {'etapa': 'gestante'})
                 bot.send_message(user_id, "📌 A pessoa está gestante ou planejando gestação?",
                     reply_markup=botoes_formulario.gestante())
             else:
+                # Menos de 12 anos (mas > 2): segue fluxo normal por faixa
+                faixa = determinar_faixa_etaria(idade)
                 _enviar_em_thread(bot, user_id, faixa)
 
     # Etapa: pediu a idade em meses (para bebês)
@@ -206,9 +209,24 @@ def processar_bebe(bot, call):
 
 # Função que trata cliques nos botões de "Gestante/Não Gestante"
 def processar_gestante(bot, call):
-    # Decide se é gestante ou adulto normal
-    faixa = "gestante" if call.data == "gestante" else "adulto"
-    _enviar_em_thread(bot, call.message.chat.id, faixa)
+    user_id = call.message.chat.id
+
+    # Se a pessoa respondeu que É gestante, usamos a faixa "gestante"
+    if call.data == "gestante":
+        faixa = "gestante"
+    else:
+        # Se respondeu "não", tentamos recuperar a idade já salva
+        u = obter_usuario(user_id)
+        idade = u.get('idade')
+
+        if idade is not None:
+            # Converte a idade em faixa correta (ex: 12-19 -> 'adolescente')
+            faixa = determinar_faixa_etaria(idade)
+        else:
+            # Fallback conservador caso não haja a idade salva
+            faixa = "adulto"
+
+    _enviar_em_thread(bot, user_id, faixa)
 
 
 # Função auxiliar para rodar uma tarefa pesada (como buscar vacinas) sem travar o bot
