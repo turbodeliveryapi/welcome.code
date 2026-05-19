@@ -1,6 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Teclados inline usados pelo bot (mantive o nome botoes_formulario.py conforme sua árvore)
+# Teclados inline usados pelo bot 
 
 def saiba_mais():
     teclado = InlineKeyboardMarkup()
