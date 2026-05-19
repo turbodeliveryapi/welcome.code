@@ -231,7 +231,7 @@ def processar_gestante(bot, call):
 
 # Função auxiliar para rodar uma tarefa pesada (como buscar vacinas) sem travar o bot
 def _enviar_em_thread(bot, user_id, faixa):
-    t = threading.Thread(target=enviar_para_servico, args=(bot, user_id, faixa), daemon=True)
+    t = threading.Thread(target=_enviar_vacinas_em_background, args=(bot, user_id, faixa), daemon=True)
     t.start()
 
 
@@ -246,7 +246,7 @@ def _formatar_vacina(vacina, dose, previne):
 
 
 # Função principal que busca e envia as vacinas recomendadas
-def enviar_para_servico(bot, user_id, faixa):
+def _enviar_vacinas_em_background(bot, user_id, faixa):
     try:
         u = obter_usuario(user_id)
         nome = u.get('nome', 'Usuário')
