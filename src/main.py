@@ -18,6 +18,10 @@ from formulario import (
 import scraping.scraper_pdf as scraper_pdf
 import scraping.scraper_vacinas as scraper_vacinas
 
+from scraping.scraper_comorbidades import (
+    buscar_info
+)
+
 # Carrega o token do .env
 load_dotenv()
 TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -46,12 +50,23 @@ def comando_start(msg):
     remover_usuario(msg.chat.id)
     iniciar_conversa(bot, msg.chat.id)
 
+@bot.message_handler(commands=['comorbidades'])
+def comando_comorbidades(msg):
+
+    texto = buscar_info()
+
+    bot.send_message(msg.chat.id, texto)
+
 @bot.message_handler(func=lambda msg: True)
 def tratar_mensagens(msg):
     if not msg.text:
         return
 
     texto = msg.text.lower().strip()
+
+    if 'comorbidades' in texto:
+        comando_comorbidades()
+        return
 
     # Se for uma saudação, inicia conversa
     if any(s in texto for s in saudacoes):
