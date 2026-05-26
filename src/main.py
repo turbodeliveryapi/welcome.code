@@ -18,8 +18,12 @@ from formulario import (
 import scraping.scraper_pdf as scraper_pdf
 import scraping.scraper_vacinas as scraper_vacinas
 
-from scraping.scraper_comorbidades import (
-    buscar_info
+from grupos_especiais import (
+    iniciar_grupos_especiais,
+    processar_quem_recebe,
+    processar_locais_vacinancao_crie,
+    processar_rie,
+    processar_fonte_crie
 )
 
 # Carrega o token do .env
@@ -53,9 +57,7 @@ def comando_start(msg):
 @bot.message_handler(commands=['comorbidades'])
 def comando_comorbidades(msg):
 
-    texto = buscar_info()
-
-    bot.send_message(msg.chat.id, texto)
+    iniciar_grupos_especiais(bot, msg.chat.id)
 
 @bot.message_handler(func=lambda msg: True)
 def tratar_mensagens(msg):
@@ -65,7 +67,7 @@ def tratar_mensagens(msg):
     texto = msg.text.lower().strip()
 
     if 'comorbidades' in texto:
-        comando_comorbidades()
+        comando_comorbidades(msg)
         return
 
     # Se for uma saudação, inicia conversa
@@ -144,6 +146,26 @@ def cb_mais_info(call):
             bot.send_message(uid, "❌ Erro ao baixar o PDF oficial.")
 
     threading.Thread(target=_enviar_calendario_em_background, daemon=True).start()
+
+@bot.callback_query_handler(func=lambda call: call.data == "quem_recebe")
+def cb_quem_recebe(call):
+    responder_callback_seguro(call)
+    processar_quem_recebe(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "locais_vacinacao_crie")
+def cb_locais_vacinacao_crie(call):
+    responder_callback_seguro(call)
+    processar_locais_vacinancao_crie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "rie")
+def cb_rie(call):
+    responder_callback_seguro(call)
+    processar_rie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "fonte_crie")
+def cb_fonte_crie(call):
+    responder_callback_seguro(call)
+    processar_fonte_crie(bot, call.message.chat.id)
 
 # --- INICIALIZAÇÃO DO BOT ---
 
