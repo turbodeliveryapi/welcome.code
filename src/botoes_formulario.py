@@ -54,3 +54,8 @@ def grupos_especiais():
     teclado.add(btn_rie, btn_fonte_crie)
     
     return teclado
+
+def voltar_grupos_especiais():
+    teclado = InlineKeyboardMarkup()
+    teclado.add(InlineKeyboardButton("↩️Voltar", callback_data="voltar_grupos_especiais"))
+    return teclado

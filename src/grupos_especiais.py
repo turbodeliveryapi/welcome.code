@@ -38,7 +38,11 @@ def processar_quem_recebe(bot, user_id):
 
         '📌 *Para consultar a UBS mais próxima de você, digite "Localização"*\n\n'
     )
-    bot.send_message(user_id, texto, parse_mode='Markdown')
+    bot.send_message(user_id, 
+        texto, 
+        parse_mode='Markdown', 
+        reply_markup=botoes_formulario.voltar_grupos_especiais()
+        )
 
 def processar_locais_vacinancao_crie(bot, user_id):
     texto = (
@@ -47,7 +51,11 @@ def processar_locais_vacinancao_crie(bot, user_id):
         
         '📌 *Para consultar a UBS mais próxima de você, digite "Localização"*'
     )
-    bot.send_message(user_id, texto, parse_mode='Markdown')
+    bot.send_message(user_id, 
+        texto, 
+        parse_mode='Markdown', 
+        reply_markup=botoes_formulario.voltar_grupos_especiais()
+        )
 
 def processar_rie(bot, user_id):
     texto = (
@@ -62,7 +70,11 @@ def processar_rie(bot, user_id):
 
         'Esses serviços trabalham em conjunto para garantir que a população com necessidades especiais em saúde tenha acesso seguro e adequado às vacinas recomendadas.'
     )
-    bot.send_message(user_id, texto, parse_mode='Markdown')
+    bot.send_message(user_id, 
+        texto, 
+        parse_mode='Markdown', 
+        reply_markup=botoes_formulario.voltar_grupos_especiais()
+        )
 
 def processar_fonte_crie(bot, user_id):
     texto = (
@@ -72,4 +84,11 @@ def processar_fonte_crie(bot, user_id):
         [Vacinas para Grupos Especiais](https://www.gov.br/saude/pt-br/vacinacao/grupos-especiais)
         '''
     )
-    bot.send_message(user_id, texto, parse_mode='Markdown')
+    bot.send_message(user_id, 
+        texto, 
+        parse_mode='Markdown', 
+        reply_markup=botoes_formulario.voltar_grupos_especiais()
+        )
+
+def processar_voltar_grupos_especiais(bot, user_id):
+    return iniciar_grupos_especiais(bot, user_id)

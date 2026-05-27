@@ -23,7 +23,8 @@ from grupos_especiais import (
     processar_quem_recebe,
     processar_locais_vacinancao_crie,
     processar_rie,
-    processar_fonte_crie
+    processar_fonte_crie,
+    processar_voltar_grupos_especiais
 )
 
 # Carrega o token do .env
@@ -166,6 +167,11 @@ def cb_rie(call):
 def cb_fonte_crie(call):
     responder_callback_seguro(call)
     processar_fonte_crie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "voltar_grupos_especiais")
+def cb_voltar_grupos_especiais(call):
+    responder_callback_seguro(call)
+    processar_voltar_grupos_especiais(bot, call.message.chat.id)
 
 # --- INICIALIZAÇÃO DO BOT ---
 
