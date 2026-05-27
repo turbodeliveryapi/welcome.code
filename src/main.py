@@ -130,6 +130,26 @@ def cb_mais_info(call):
 
     threading.Thread(target=_enviar_calendario_em_background, daemon=True).start()
 
+#  --- MENSAGEM FINAL ---
+
+@bot.callback_query_handler(func=lambda call: call.data == "interacao_final")
+def mensagem_final(call):
+    responder_callback_seguro(call)
+    texto = (
+        "🤖 *O que mais você deseja fazer? Escolha uma das opções abaixo:*\n\n"
+        "• Consultar vacinas\n\n"
+        "• Consultar restrições para comorbidades\n"
+        "• Consultar informações sobre vacinas especiais\n"
+        "• Ver UBSs próximas a mim \n"
+        "• Ver coberturas vacinais\n"
+        "• Ver alternativas de vacinação domiciliar\n"
+        "• Saber mais sobre o bot\n"
+        "• Finalizar interação\n\n"
+        "👇 Digite uma das opções mencionadas."
+    )
+    bot.send_message(call.message.chat.id, texto, parse_mode='Markdown')
+
+
 # --- INICIALIZAÇÃO DO BOT ---
 
 if __name__ == "__main__":
