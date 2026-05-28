@@ -18,15 +18,6 @@ from formulario import (
 import scraping.scraper_pdf as scraper_pdf
 import scraping.scraper_vacinas as scraper_vacinas
 
-from grupos_especiais import (
-    iniciar_grupos_especiais,
-    processar_quem_recebe,
-    processar_locais_vacinancao_crie,
-    processar_rie,
-    processar_fonte_crie,
-    processar_voltar_grupos_especiais
-)
-
 # Carrega o token do .env
 load_dotenv()
 TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -55,21 +46,12 @@ def comando_start(msg):
     remover_usuario(msg.chat.id)
     iniciar_conversa(bot, msg.chat.id)
 
-@bot.message_handler(commands=['comorbidades'])
-def comando_comorbidades(msg):
-
-    iniciar_grupos_especiais(bot, msg.chat.id)
-
 @bot.message_handler(func=lambda msg: True)
 def tratar_mensagens(msg):
     if not msg.text:
         return
 
     texto = msg.text.lower().strip()
-
-    if 'comorbidades' in texto:
-        comando_comorbidades(msg)
-        return
 
     # Se for uma saudação, inicia conversa
     if any(s in texto for s in saudacoes):
@@ -147,31 +129,6 @@ def cb_mais_info(call):
             bot.send_message(uid, "❌ Erro ao baixar o PDF oficial.")
 
     threading.Thread(target=_enviar_calendario_em_background, daemon=True).start()
-
-@bot.callback_query_handler(func=lambda call: call.data == "quem_recebe")
-def cb_quem_recebe(call):
-    responder_callback_seguro(call)
-    processar_quem_recebe(bot, call.message.chat.id)
-
-@bot.callback_query_handler(func=lambda call: call.data == "locais_vacinacao_crie")
-def cb_locais_vacinacao_crie(call):
-    responder_callback_seguro(call)
-    processar_locais_vacinancao_crie(bot, call.message.chat.id)
-
-@bot.callback_query_handler(func=lambda call: call.data == "rie")
-def cb_rie(call):
-    responder_callback_seguro(call)
-    processar_rie(bot, call.message.chat.id)
-
-@bot.callback_query_handler(func=lambda call: call.data == "fonte_crie")
-def cb_fonte_crie(call):
-    responder_callback_seguro(call)
-    processar_fonte_crie(bot, call.message.chat.id)
-
-@bot.callback_query_handler(func=lambda call: call.data == "voltar_grupos_especiais")
-def cb_voltar_grupos_especiais(call):
-    responder_callback_seguro(call)
-    processar_voltar_grupos_especiais(bot, call.message.chat.id)
 
 # --- INICIALIZAÇÃO DO BOT ---
 

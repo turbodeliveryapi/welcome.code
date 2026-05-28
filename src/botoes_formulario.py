@@ -41,21 +41,3 @@ def mais_informacoes():
     teclado = InlineKeyboardMarkup()
     teclado.add(InlineKeyboardButton("📄 Ver Calendário Oficial", callback_data="mais_info"))
     return teclado
-
-def grupos_especiais():
-    teclado = InlineKeyboardMarkup(row_width=2)
-
-    btn_quem_recebe = InlineKeyboardButton("👥 Grupos aptos", callback_data="quem_recebe")
-    btn_locais_vacinacao_crie = InlineKeyboardButton("📍 Unidades", callback_data="locais_vacinacao_crie")
-    btn_rie = InlineKeyboardButton("🏥 Sobre a RIE", callback_data="rie")
-    btn_fonte_crie = InlineKeyboardButton("🔗 Fonte Oficial", callback_data="fonte_crie")
-    
-    teclado.add(btn_quem_recebe, btn_locais_vacinacao_crie)
-    teclado.add(btn_rie, btn_fonte_crie)
-    
-    return teclado
-
-def voltar_grupos_especiais():
-    teclado = InlineKeyboardMarkup()
-    teclado.add(InlineKeyboardButton("↩️Voltar", callback_data="voltar_grupos_especiais"))
-    return teclado
