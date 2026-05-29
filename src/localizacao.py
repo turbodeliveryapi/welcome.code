@@ -177,7 +177,7 @@ def processar_e_responder_postos(chat_id, lat, lon, nome_local):
         reply_markup=obter_teclado_permanente()
     )
 
-# 🚀 INICIALIZAÇÃO DO BOT
+# INICIALIZAÇÃO DO BOT
 print("Bot 100% automático e simplificado iniciado!")
 while True:
     try:
