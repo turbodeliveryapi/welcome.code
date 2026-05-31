@@ -146,6 +146,21 @@ def mensagem_final(call):
         "• Saber mais sobre o bot\n"
         "• Finalizar interação\n\n"
         "👇 Digite uma das opções mencionadas."
+
+@bot.callback_query_handler(func=lambda call: call.data == "vacinacao_domiciliar")
+def cb_mais_info(call):
+    responder_callback_seguro(call)
+
+    texto = (
+            "🏠Passos para solicitar atendimento domiciliar💉\n\n\n"
+            "1️⃣Identificar a Unidade Básica de Saúde (UBS) mais próxima da residência do paciente.\n\n"
+            "2️⃣ Um familiar deve comparecer à UBS levando:\n"
+            "• Documento de identificação do paciente;\n"
+            "• Cartão do SUS;\n"
+            "• Comprovante de residência.\n\n"
+            "3️⃣Apresentar um laudo ou relatório médico justificando a impossibilidade de locomoção.\n\n"
+            "4️⃣Solicitar a inclusão do paciente no cronograma de visitas da equipe de saúde da família ou dos Agentes Comunitários de Saúde (ACS).\n\n"
+            "👇 Vamos continuar? Qual é o seu nome?"
     )
     bot.send_message(call.message.chat.id, texto, parse_mode='Markdown')
 
