@@ -15,6 +15,15 @@ from formulario import (
     remover_usuario
 )
 
+from grupos_especiais import (
+    iniciar_grupos_especiais,
+    processar_quem_recebe,
+    processar_locais_vacinancao_crie,
+    processar_rie,
+    processar_fonte_crie,
+    processar_voltar_grupos_especiais
+)
+
 import scraping.scraper_pdf as scraper_pdf
 import scraping.scraper_vacinas as scraper_vacinas
 
@@ -46,6 +55,11 @@ def comando_start(msg):
     remover_usuario(msg.chat.id)
     iniciar_conversa(bot, msg.chat.id)
 
+@bot.message_handler(commands=['comorbidades'])
+def comando_comorbidades(msg):
+
+    iniciar_grupos_especiais(bot, msg.chat.id)
+
 @bot.message_handler(func=lambda msg: True)
 def tratar_mensagens(msg):
     if not msg.text:
@@ -56,6 +70,10 @@ def tratar_mensagens(msg):
     # Se for uma saudação, inicia conversa
     if any(s in texto for s in saudacoes):
         iniciar_conversa(bot, msg.chat.id)
+        return
+    
+    if 'comorbidades' in texto:
+        comando_comorbidades(msg)
         return
 
     # Caso contrário, passa para o formulário processar
@@ -130,6 +148,31 @@ def cb_mais_info(call):
 
     threading.Thread(target=_enviar_calendario_em_background, daemon=True).start()
 
+@bot.callback_query_handler(func=lambda call: call.data == "quem_recebe")
+def cb_quem_recebe(call):
+    responder_callback_seguro(call)
+    processar_quem_recebe(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "locais_vacinacao_crie")
+def cb_locais_vacinacao_crie(call):
+    responder_callback_seguro(call)
+    processar_locais_vacinancao_crie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "rie")
+def cb_rie(call):
+    responder_callback_seguro(call)
+    processar_rie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "fonte_crie")
+def cb_fonte_crie(call):
+    responder_callback_seguro(call)
+    processar_fonte_crie(bot, call.message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "voltar_grupos_especiais")
+def cb_voltar_grupos_especiais(call):
+    responder_callback_seguro(call)
+    processar_voltar_grupos_especiais(bot, call.message.chat.id)
+
 #  --- MENSAGEM FINAL ---
 
 @bot.callback_query_handler(func=lambda call: call.data == "interacao_final")
@@ -146,6 +189,7 @@ def mensagem_final(call):
         "• Saber mais sobre o bot\n"
         "• Finalizar interação\n\n"
         "👇 Digite uma das opções mencionadas."
+    )
 
 @bot.callback_query_handler(func=lambda call: call.data == "vacinacao_domiciliar")
 def cb_mais_info(call):
