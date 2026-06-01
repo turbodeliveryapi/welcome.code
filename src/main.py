@@ -24,6 +24,13 @@ from grupos_especiais import (
     processar_voltar_grupos_especiais
 )
 
+from localizacao import (
+    iniciar_localizacao,
+    processar_localizacao,
+    usuarios_localizacao,
+    mensagem_loc
+)
+
 import scraping.scraper_pdf as scraper_pdf
 import scraping.scraper_vacinas as scraper_vacinas
 
@@ -40,6 +47,11 @@ bot = telebot.TeleBot(TOKEN.strip(), threaded=True, num_threads=10)
 
 # Palavras-chave que reiniciam o fluxo
 saudacoes = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'ajuda', 'start', 'opa', 'eae', 'eai', 'dia', 'tarde', 'noite', 'fala']
+lista_consulta = ["consulta", "consuta", "consulte", "consultar", "consuntando", "agendar", "marcar", "agendando", "visitar", "verificar", "informação"]
+lista_endereço = ["endereço", "local", "região", "posto", "onde", "fica", "ponto", "rua", "bairro", "perto"]
+lista_domiciliar = ["domiciliar", "casa", "residência", "residencial", "home", "acamado", "locomoção", "vir", "aparamento", "apartamento", "locomover", "lomocover"]
+lista_comorbidades = ["comorbidades"]
+lista_saiba_mais = ["saiba mais"]
 
 def responder_callback_seguro(call):
   #Confirma o clique no botão para o Telegram (remove o reloginho do botão)
@@ -60,9 +72,31 @@ def comando_comorbidades(msg):
 
     iniciar_grupos_especiais(bot, msg.chat.id)
 
+@bot.message_handler(commands=['localizacao'])
+def mensagem_boas_vindas(message):
+    bot.send_message(
+        message.chat.id,
+        "👋 Olá! Seja bem-vindo ao buscador de Postos de Saúde.\n\n"
+        "Aqui você pode descobrir o posto mais próximo de você de duas formas:\n"
+        "📱 *No Celular:* Clique no botão azul aqui embaixo para enviar seu GPS.\n"
+        "💻 *No Computador ou Celular:* Escreva diretamente o seu endereço ou CEP aqui no chat (Ex: _Rua Frutal, São José dos Campos_ ou _12233-596_).",
+        reply_markup=obter_teclado_permanente(),
+        parse_mode="Markdown"
+    )
+
+@bot.message_handler(content_types=['location'])
+def receber_localizacao_gps(message):
+    lat = message.location.latitude
+    lon = message.location.longitude
+    processar_e_responder_postos(message.chat.id, lat, lon, "sua localização atual")
+
 @bot.message_handler(func=lambda msg: True)
 def tratar_mensagens(msg):
     if not msg.text:
+        return
+    
+    if msg.chat.id in usuarios_localizacao:
+        processar_localizacao(bot, msg)
         return
 
     texto = msg.text.lower().strip()
@@ -72,9 +106,24 @@ def tratar_mensagens(msg):
         iniciar_conversa(bot, msg.chat.id)
         return
     
-    if 'comorbidades' in texto:
-        comando_comorbidades(msg)
+    if any(s in texto for s in lista_comorbidades):
+        iniciar_grupos_especiais(bot, msg.chat.id)
         return
+
+    if any(s in texto for s in lista_consulta):
+        return
+
+    if any(s in texto for s in lista_endereço):
+        iniciar_localizacao(bot, msg.chat.id)
+        return
+
+    if any(s in texto for s in lista_domiciliar):
+        atend_domiciliar(msg.chat.id)
+        return
+
+    if any(s in texto for s in lista_saiba_mais):
+        saiba_mais(msg.chat.id)
+        return 
 
     # Caso contrário, passa para o formulário processar
     processar_resposta(bot, msg)
@@ -83,9 +132,7 @@ def tratar_mensagens(msg):
     #Handlers que respondem aos cliques dos botões inline e encaminham o fluxo do formulário
 
     #Mostra informações sobre o bot e pergunta o nome (acionado pelo botão "Saiba Mais")
-@bot.callback_query_handler(func=lambda call: call.data == "saiba_mais")
-def cb_saiba_mais(call):
-    responder_callback_seguro(call)
+def saiba_mais(chat_id):
     texto = (
         "🤖 *Sobre o HealthyBot*\n\n"
         "Consulta realizada através do Site Oficial do MINISTÉRIO DA SAÚDE:\n\n"
@@ -96,7 +143,16 @@ def cb_saiba_mais(call):
         "• Envio o calendário vacinal\n\n"
         "👇 Vamos continuar? Qual é o seu nome?"
     )
-    bot.send_message(call.message.chat.id, texto, parse_mode='Markdown')
+
+    bot.send_message(chat_id, texto, parse_mode='Markdown')
+
+    mensagem_final(chat_id)
+
+def obter_teclado_permanente():
+    keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    botao_gps = types.KeyboardButton(text="📍 Enviar minha Localização Atual (Celular)", request_location=True)
+    keyboard.add(botao_gps)
+    return keyboard
 
 #Pergunta se a consulta é para o próprio usuário ou para outra pessoa
 @bot.callback_query_handler(func=lambda call: call.data in ["user", "outra_pessoa"])
@@ -175,9 +231,7 @@ def cb_voltar_grupos_especiais(call):
 
 #  --- MENSAGEM FINAL ---
 
-@bot.callback_query_handler(func=lambda call: call.data == "interacao_final")
-def mensagem_final(call):
-    responder_callback_seguro(call)
+def mensagem_final(chat_id):
     texto = (
         "🤖 *O que mais você deseja fazer? Escolha uma das opções abaixo:*\n\n"
         "• Consultar vacinas\n\n"
@@ -191,10 +245,9 @@ def mensagem_final(call):
         "👇 Digite uma das opções mencionadas."
     )
 
-@bot.callback_query_handler(func=lambda call: call.data == "vacinacao_domiciliar")
-def cb_mais_info(call):
-    responder_callback_seguro(call)
+    bot.send_message(chat_id, texto, parse_mode='Markdown')
 
+def atend_domiciliar(chat_id):
     texto = (
             "🏠Passos para solicitar atendimento domiciliar💉\n\n\n"
             "1️⃣Identificar a Unidade Básica de Saúde (UBS) mais próxima da residência do paciente.\n\n"
@@ -206,7 +259,8 @@ def cb_mais_info(call):
             "4️⃣Solicitar a inclusão do paciente no cronograma de visitas da equipe de saúde da família ou dos Agentes Comunitários de Saúde (ACS).\n\n"
             "👇 Vamos continuar? Qual é o seu nome?"
     )
-    bot.send_message(call.message.chat.id, texto, parse_mode='Markdown')
+
+    bot.send_message(chat_id, texto, parse_mode='Markdown')
 
 
 # --- INICIALIZAÇÃO DO BOT ---
