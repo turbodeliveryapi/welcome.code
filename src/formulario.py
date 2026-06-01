@@ -75,51 +75,62 @@ def remover_usuario(user_id):
     if user_id in usuarios:
         del usuarios[user_id]
 
-
 # Função que começa a conversa com o usuário
-def iniciar_conversa(bot, user_id):
-    # Registra que o usuário está na etapa de informar o nome
-    atualizar_usuario(user_id, {'etapa': 'nome'})
+def iniciar_conversa(bot, message):
+    user_id = message.from_user.id
+    nome = message.from_user.first_name
 
-    # Mensagem de boas-vindas com botão "Saiba Mais"
+    atualizar_usuario(user_id, {
+        'nome': nome,
+        'etapa': 'inicio'
+    })
+
     texto = (
-        '✨ 🤖 *Bem-vindo ao HealthyBot!* ✨\n\n'
-        "👋 Oi! Eu sou o *HealthyBot* 😊\n\n"
-        "Vou te ajudar a encontrar seu Calendário de Vacinação 💉\n\n"
-        "Para começar, qual é o seu nome?\n\n"
+        f"Olá, {nome}! 👋\n\n"
+        "✨ 🤖 *Bem-vindo ao HealthyBot!* ✨\n\n"
+        "Eu sou o *HealthyBot* 😊\n\n"
+        "Vou te ajudar a tirar suas dúvidas quanto à vacinação 💉\n\n"
+        "Você pode:\n"
+        "- Consultar as vacinas que você ou outra pessoa precisa tomar\n"
+        "- Consultar postinhos perto de você\n"
+        "- Saber mais sobre grupos especiais de vacinação\n"
+        "- Como conseguir vacinação domiciliar\n"
+        "- Saber mais sobre nós\n\n"
+        "O que quer fazer?\n"
     )
 
-    # Envia a mensagem com estilo Markdown e o botão "Saiba Mais"
-    bot.send_message(user_id, texto, parse_mode='Markdown', reply_markup=botoes_formulario.menu_inicial())
+    bot.send_message(
+        user_id,
+        texto,
+        parse_mode='Markdown'
+    )
 
+def consulta_vacinal(bot, message):
 
-# Função que trata respostas escritas pelo usuário
-def processar_resposta(bot, msg):
-    # Pega o ID do usuário e o texto digitado
-    user_id = msg.chat.id
-    texto = msg.text.strip()
-    # Pega os dados salvos desse usuário
+    user_id = message.from_user.id
+    idade = message.text.strip()
+
     u = obter_usuario(user_id)
 
-    # Se não tem dados, pede pra reiniciar
     if not u:
         bot.send_message(user_id, "👋 Digite 'Oi' para iniciar uma consulta.")
         return
 
-    # Verifica em qual etapa da conversa o usuário está
+    nome = u.get('nome', 'Usuário')
     etapa = u.get('etapa')
 
-    # Etapa: pediu o nome
-    if etapa == 'nome':
-        atualizar_usuario(user_id, {'nome': texto.title(), 'etapa': 'tipo_pessoa'})
+    if etapa == 'inicio':
+        atualizar_usuario(user_id, {'etapa': 'tipo_pessoa'})
+
         bot.send_message(
             user_id,
-            f"📌 Legal {texto.title()}, para quem é a consulta?",
+            f"📌 Legal, {nome}! Para quem é a consulta?",
             reply_markup=botoes_formulario.tipo_pessoa()
         )
+        return
 
     # Etapa: perguntou se é pra si ou outra pessoa
-    elif etapa == 'tipo_pessoa':
+    if etapa == 'tipo_pessoa':
         bot.send_message(user_id, "👆 Use os botões para responder.", reply_markup=botoes_formulario.tipo_pessoa())
 
     # Etapa: perguntou se é bebê
@@ -132,12 +143,12 @@ def processar_resposta(bot, msg):
 
     # Etapa: pediu a idade em anos
     elif etapa == 'idade':
-        # Verifica se o texto é número
-        if not texto.isdigit():
+        # Verifica se o idade é número
+        if not idade.isdigit():
             bot.send_message(user_id, "❗ Por favor, digite apenas números.")
             return
 
-        idade = int(texto)
+        idade = int(idade)
 
         # Verifica se a idade é válida
         if idade < 0 or idade > 150:
@@ -167,12 +178,12 @@ def processar_resposta(bot, msg):
 
     # Etapa: pediu a idade em meses (para bebês)
     elif etapa == 'idade_meses':
-        # Verifica se o texto é número
-        if not texto.isdigit():
+        # Verifica se o idade é número
+        if not idade.isdigit():
             bot.send_message(user_id, "❗ Por favor, digite apenas números.")
             return
 
-        meses = int(texto)
+        meses = int(idade)
 
         # Verifica se está dentro do limite
         if meses < 0 or meses > 24:
@@ -332,3 +343,7 @@ def _enviar_vacinas_em_background(bot, user_id, faixa):
         # Em caso de erro, avisa o usuário
         print(f"Erro ao buscar vacinas para o usuário {user_id}: {e}")
         bot.send_message(user_id, "😓 Ops! Algo deu errado.\n\nDigite 'Oi' para recomeçar.")
+
+    atualizar_usuario(user_id, {
+    'etapa': 'inicio'
+})
