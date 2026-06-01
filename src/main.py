@@ -1,3 +1,4 @@
+from telebot import types
 import os
 import time
 import threading
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 # Importa as funções do fluxo 
 from formulario import (
     iniciar_conversa,
-    processar_resposta,
+    consulta_vacinal,
     processar_gestante,
     processar_tipo_pessoa,
     processar_bebe,
@@ -28,6 +29,7 @@ from localizacao import (
     iniciar_localizacao,
     processar_localizacao,
     usuarios_localizacao,
+    processar_e_responder_postos,
     mensagem_loc
 )
 
@@ -65,7 +67,7 @@ def responder_callback_seguro(call):
 @bot.message_handler(commands=['start', 'reiniciar'])
 def comando_start(msg):
     remover_usuario(msg.chat.id)
-    iniciar_conversa(bot, msg.chat.id)
+    iniciar_conversa(bot, msg)
 
 @bot.message_handler(commands=['comorbidades'])
 def comando_comorbidades(msg):
@@ -76,8 +78,7 @@ def comando_comorbidades(msg):
 def mensagem_boas_vindas(message):
     bot.send_message(
         message.chat.id,
-        "👋 Olá! Seja bem-vindo ao buscador de Postos de Saúde.\n\n"
-        "Aqui você pode descobrir o posto mais próximo de você de duas formas:\n"
+        "Para podermos te dizer os postos, siga os passos:\n"
         "📱 *No Celular:* Clique no botão azul aqui embaixo para enviar seu GPS.\n"
         "💻 *No Computador ou Celular:* Escreva diretamente o seu endereço ou CEP aqui no chat (Ex: _Rua Frutal, São José dos Campos_ ou _12233-596_).",
         reply_markup=obter_teclado_permanente(),
@@ -98,12 +99,24 @@ def tratar_mensagens(msg):
     if msg.chat.id in usuarios_localizacao:
         processar_localizacao(bot, msg)
         return
+    
+    u = obter_usuario(msg.chat.id)
+
+    if u and u.get("etapa") in [
+        "tipo_pessoa",
+        "bebe_check",
+        "idade",
+        "idade_meses",
+        "gestante"
+    ]:
+        consulta_vacinal(bot, msg)
+        return
 
     texto = msg.text.lower().strip()
 
     # Se for uma saudação, inicia conversa
     if any(s in texto for s in saudacoes):
-        iniciar_conversa(bot, msg.chat.id)
+        iniciar_conversa(bot, msg)
         return
     
     if any(s in texto for s in lista_comorbidades):
@@ -111,6 +124,7 @@ def tratar_mensagens(msg):
         return
 
     if any(s in texto for s in lista_consulta):
+        consulta_vacinal(bot, msg)
         return
 
     if any(s in texto for s in lista_endereço):
@@ -124,9 +138,11 @@ def tratar_mensagens(msg):
     if any(s in texto for s in lista_saiba_mais):
         saiba_mais(msg.chat.id)
         return 
-
-    # Caso contrário, passa para o formulário processar
-    processar_resposta(bot, msg)
+    
+    bot.send_message(
+        msg.chat.id,
+        "Não entendi sua solicitação. Pode repetir o comando?."
+    )
 
 # --- HANDLERS DE CALLBACK (BOTÕES INLINE) ---
     #Handlers que respondem aos cliques dos botões inline e encaminham o fluxo do formulário
